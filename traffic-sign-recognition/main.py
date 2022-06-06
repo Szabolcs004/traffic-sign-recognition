@@ -8,6 +8,16 @@ cap.set(3, frameWidth)
 cap.set(4, frameHeight)
 
 
+def empty(a):
+    pass
+
+
+cv2.nameWindow('Parameters')
+cv2.resizeWindow('Parameters', 640, 240)
+cv2.createTrackbar('Threshold1', 'Parameters', 150, 255, empty)
+cv2.createTrackbar('Threshold2', 'Parameters', 255, 255, empty)
+
+
 def stackImages(scale, imgArray):
     rows = len(imgArray)
     cols = len(imgArray[0])
@@ -22,7 +32,8 @@ def stackImages(scale, imgArray):
                 else:
                     imgArray[x][y] = cv2.resize(imgArray[x][y], (imgArray[0][0].shape[1], imgArray[0][0].shape[0]),
                                                 None, scale, scale)
-                if len(imgArray[x][y].shape) == 2: imgArray[x][y]= cv2.cvtColor( imgArray[x][y], cv2.COLOR_GRAY2BGR)
+                if len(imgArray[x][y].shape) == 2:
+                    imgArray[x][y] = cv2.cvtColor(imgArray[x][y], cv2.COLOR_GRAY2BGR)
         imageBlank = np.zeros((height, width, 3), np.uint8)
         hor = [imageBlank]*rows
         hor_con = [imageBlank]*rows
@@ -34,9 +45,10 @@ def stackImages(scale, imgArray):
             if imgArray[x].shape[:2] == imgArray[0].shape[:2]:
                 imgArray[x] = cv2.resize(imgArray[x], (0, 0), None, scale, scale)
             else:
-                imgArray[x] = cv2.resize(imgArray[x], (imgArray[0].shape[1], imgArray[0].shape[0]), None,scale, scale)
-            if len(imgArray[x].shape) == 2: imgArray[x] = cv2.cvtColor(imgArray[x], cv2.COLOR_GRAY2BGR)
-        hor= np.hstack(imgArray)
+                imgArray[x] = cv2.resize(imgArray[x], (imgArray[0].shape[1], imgArray[0].shape[0]), None, scale, scale)
+            if len(imgArray[x].shape) == 2:
+                imgArray[x] = cv2.cvtColor(imgArray[x], cv2.COLOR_GRAY2BGR)
+        hor = np.hstack(imgArray)
         ver = hor
     return ver
 
@@ -47,8 +59,12 @@ while True:
     imgBlur = cv2.GaussianBlur(img, (7, 7), 1)
     imgGray = cv2.cvtColor(imgBlur, cv2.COLOR_BGR2GRAY)
 
-    imgStack = stackImages(0.8)
+    threshold1 = cv2.getTrackbarPos('Threshold1', 'Parameters')
+    threshold2 = cv2.getTrackbarPos('Threshold2', 'Parameters')
+    imgCanny = cv2.Canny(imgGray, threshold1, threshold2)
 
+
+    imgStack = stackImages(0.8, ([img, imgBlur, imgGray]))
     cv2.imshow("Result", img)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
